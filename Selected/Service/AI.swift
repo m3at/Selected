@@ -62,6 +62,14 @@ struct Translation {
                 } else {
                     await ClaudeTrans2Chinese.chatOne(selectedText: content, completion: completion)
                 }
+            case "Local":
+                if isWord(str: content) {
+                    let localWordTrans = LocalModelService(prompt: "Translate the following word to Chinese, explaining its different meanings in detail, and providing examples in the original language with translations. Use markdown format for the reply, with the word as the first line title. The word is: {selected.text}")
+                    await localWordTrans.chatOne(selectedText: content, completion: completion)
+                } else {
+                    let localTrans2Chinese = LocalModelService(prompt:"You are a professional translator proficient in Simplified Chinese. Translate the following content into Chinese. Rule: reply with the translated content directly. The content is: {selected.text}")
+                    await localTrans2Chinese.chatOne(selectedText: content, completion: completion)
+                }
             default:
                 completion("no model \(Defaults[.aiService])")
         }
@@ -74,6 +82,9 @@ struct Translation {
                 await OpenAITrans2English.chatOne(selectedText: content, completion: completion)
             case "Claude":
                 await ClaudeTrans2English.chatOne(selectedText: content, completion: completion)
+            case "Local":
+                let localTrans2English = LocalModelService(prompt:"You are a professional translator proficient in English. Translate the following content into English. Rule: reply with the translated content directly. The content is：{selected.text}")
+                await localTrans2English.chatOne(selectedText: content, completion: completion)
             default:
                 completion("no model \(Defaults[.aiService])")
         }
@@ -93,6 +104,8 @@ struct ChatService: AIChatService{
                 chatService = OpenAIService(prompt: prompt, options: options)
             case "Claude":
                 chatService = ClaudeService(prompt: prompt, options: options)
+            case "Local":
+                chatService = LocalModelService(prompt: prompt, options: options)
             default:
                 return nil
         }

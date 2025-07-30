@@ -22,7 +22,8 @@ extension Defaults.Keys {
     
     // OpenAI
     static let openAIAPIKey = Key<String>("OpenAIAPIKey", default: "")
-    static let openAIAPIHost = Key<String>("OpenAIAPIHost",default: "api.openai.com")
+    // static let openAIAPIHost = Key<String>("OpenAIAPIHost",default: "api.openai.com")
+    static let openAIAPIHost = Key<String>("OpenAIAPIHost",default: "http://localhost:8043")
     static let openAIModel = Key<OpenAIModel>("OpenAIModel", default: .gpt4_o)
     static let openAIModelReasoningEffort = Key<String>("openAIModelReasoningEffort", default:
                                                             "medium")
@@ -41,6 +42,10 @@ extension Defaults.Keys {
     static let claudeAPIKey = Key<String>("ClaudeAPIKey", default: "")
     static let claudeAPIHost = Key<String>("ClaudeAPIHost", default: "https://api.anthropic.com")
     static let claudeModel = Key<String>("ClaudeModel", default: ClaudeModel.claude35Sonnet.value)
+
+    // Local Model
+    static let localModelPort = Key<Int>("LocalModelPort", default: 8043)
+    static let localModel = Key<String>("LocalModel", default: "local-model")
 
     // clipboard
     static let enableClipboard = Key<Bool>("EnableClipboard", default: false)

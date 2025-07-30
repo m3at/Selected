@@ -19,7 +19,7 @@ struct SettingsView: View {
     @Environment(\.colorScheme) var colorScheme
 
     @Default(.aiService) var aiService
-    let aiServicePickerValues = ["OpenAI", "Claude"]
+    let aiServicePickerValues = ["OpenAI", "Claude", "Local"]
 
 
     @Default(.openAIAPIKey) var openAIAPIKey
@@ -40,6 +40,9 @@ struct SettingsView: View {
     @Default(.claudeAPIKey) var claudeAPIKey
     @Default(.claudeAPIHost) var claudeAPIHost
     @Default(.claudeModel) var claudeModel
+
+    @Default(.localModelPort) var localModelPort
+    @Default(.localModel) var localModel
 
     @Default(.search) var searchURL
 
@@ -161,6 +164,13 @@ struct SettingsView: View {
 
                     Section(header: Text("Gemini")) {
                         SecureField("APIKey", text: $geminiAPIKey)
+                    }
+
+                    Section(header: Text("Local Model")) {
+                        TextField("Port", value: $localModelPort, formatter: NumberFormatter())
+                            .textFieldStyle(.roundedBorder)
+                        TextField("Model Name", text: $localModel)
+                            .textFieldStyle(.roundedBorder)
                     }
                 }
                 .scrollContentBackground(.hidden)

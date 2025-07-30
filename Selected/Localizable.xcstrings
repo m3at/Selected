@@ -532,6 +532,9 @@
         }
       }
     },
+    "Local Model" : {
+
+    },
     "Model" : {
       "localizations" : {
         "zh-Hans" : {
@@ -541,6 +544,9 @@
           }
         }
       }
+    },
+    "Model Name" : {
+
     },
     "mp3" : {
       "localizations" : {
@@ -643,6 +649,9 @@
           }
         }
       }
+    },
+    "Port" : {
+
     },
     "Press cmd+enter to send new message" : {
       "localizations" : {

@@ -1,117 +1,61 @@
 //
-//  OpenAI.swift
+//  LocalModelService.swift
 //  Selected
 //
-//  Created by sake on 2024/3/10.
+//  Created by Selected on 2025/07/30.
 //
 
-import OpenAI
+import Foundation
 import Defaults
-import SwiftUI
-import AVFoundation
+import OpenAI
 
-typealias OpenAIModel = Model
-
-extension Model {
-    static let gpt4_1 = "gpt-4.1"
-    static let gpt4_1_mini = "gpt-4.1-mini"
-
-    static let o4_mini = "o4-mini"
-    static let o3 = "o3"
-}
-
-let OpenAIModels: [Model] = [.gpt4_1, .gpt4_1_mini, .o4_mini, .o3, .gpt4_o, .gpt4_o_mini, .o1, .o1_mini, .o3_mini]
-let OpenAITTSModels: [Model] = [.gpt_4o_mini_tts, .tts_1, .tts_1_hd]
-let OpenAITranslationModels: [Model] = [.gpt4_1_mini, .gpt4_o, .gpt4_o_mini]
-
-func isReasoningModel(_ model: Model) -> Bool {
-    return [.o4_mini, .o3, .o1, .o3_mini].contains(model)
-}
-
-
-let dalle3Def = ChatQuery.ChatCompletionToolParam.FunctionDefinition(
-    name: "Dall-E-3",
-    description: "When user asks for a picture, create a prompt that dalle can use to generate the image. The prompt must be in English. Translate to English if needed. The url of the image will be returned.",
-    parameters:
-            .init(
-                fields: [
-                    .type(.object),
-                    .properties(
-                    [
-                        "prompt":
-                                .init(
-                                    fields: [
-                                        .type( .string), .description("the generated prompt sent to dalle3"),
-                                            ]
-                                    )
-                        ]
-                    )
-                    ]
-    )
-)
-
-
-typealias OpenAIChatCompletionMessageToolCallParam = ChatQuery.ChatCompletionMessageParam.AssistantMessageParam.ToolCallParam
-typealias ChatFunctionCall = OpenAIChatCompletionMessageToolCallParam.FunctionCall
-typealias FunctionParameters = ChatQuery.ChatCompletionToolParam.FunctionDefinition
-typealias ChatCompletionMessageToolCallParam = OpenAIChatCompletionMessageToolCallParam
-
-class OpenAIService: AIChatService{
+class LocalModelService: AIChatService {
     private let prompt: String
     private var tools: [FunctionDefinition]?
     private let openAI: OpenAI
     private var query: ChatQuery
     private var options: [String: String]
 
-    // Initialize with prompt, tool list, and other options
     init(prompt: String, tools: [FunctionDefinition]? = nil, options: [String: String] = [:]) {
         self.prompt = prompt
         self.tools = tools
-        // var host = "api.openai.com"
-        var host = "http://localhost:8043"
-        if Defaults[.openAIAPIHost] != "" {
-            host = Defaults[.openAIAPIHost]
-        }
-        let configuration = OpenAI.Configuration(token: Defaults[.openAIAPIKey], host: host, timeoutInterval: 60.0, parsingOptions: .relaxed)
+        let port = Defaults[.localModelPort]
+        let host = "localhost:\(port)"
+        let configuration = OpenAI.Configuration(token: "local", host: host, scheme: "http", timeoutInterval: 60.0, parsingOptions:
+.relaxed)
         self.openAI = OpenAI(configuration: configuration)
         self.options = options
-        self.query = OpenAIService.createQuery(functions: tools, model: Defaults[.openAIModel])
+        self.query = LocalModelService.createQuery(functions: tools, model: Defaults[.localModel])
     }
 
-    // Initialize directly with prompt and model
-    init(prompt: String, model: OpenAIModel) {
+    init(prompt: String, model: String) {
         self.prompt = prompt
         self.tools = nil
-        // var host = "api.openai.com"
-        var host = "http://localhost:8043"
-        if Defaults[.openAIAPIHost] != "" {
-            host = Defaults[.openAIAPIHost]
-        }
-        let configuration = OpenAI.Configuration(token: Defaults[.openAIAPIKey], host: host, timeoutInterval: 60.0)
+        let port = Defaults[.localModelPort]
+        let host = "localhost:\(port)"
+        let configuration = OpenAI.Configuration(token: "local", host: host, scheme: "http", timeoutInterval: 60.0)
         self.openAI = OpenAI(configuration: configuration)
         self.options = [:]
-        self.query = OpenAIService.createQuery(functions: tools, model: model)
+        self.query = LocalModelService.createQuery(functions: tools, model: model)
     }
 
-    // Update conversation query
     private func updateQuery(message: ChatQuery.ChatCompletionMessageParam) {
         var messages = query.messages
         messages.append(message)
-        query = ChatQuery(messages: messages, model: query.model, reasoningEffort: query.reasoningEffort, tools: query.tools)
+        query = ChatQuery(messages: messages, model: query.model, tools: query.tools)
     }
 
     private func updateQuery(messages: [ChatQuery.ChatCompletionMessageParam]) {
         var updatedMessages = query.messages
         updatedMessages.append(contentsOf: messages)
-        query = ChatQuery(messages: updatedMessages, model: query.model,  reasoningEffort: query.reasoningEffort, tools: query.tools)
+        query = ChatQuery(messages: updatedMessages, model: query.model, tools: query.tools)
     }
 
-    /// Single turn conversation, suitable for simple result returns (streaming return)
     func chatOne(selectedText: String, completion: @escaping (String) -> Void) async {
         var messages = query.messages
         let messageContent = replaceOptions(content: prompt, selectedText: selectedText, options: options)
         messages.append(.init(role: .user, content: messageContent)!)
-        let query = ChatQuery(messages: messages, model: query.model, reasoningEffort: query.reasoningEffort, tools: query.tools)
+        let query = ChatQuery(messages: messages, model: query.model, tools: query.tools)
 
         do {
             for try await result in openAI.chatsStream(query: query) {
@@ -124,7 +68,6 @@ class OpenAIService: AIChatService{
         }
     }
 
-    /// Initiate conversation, will have multiple turns until assistant's reply is received
     func chat(ctx: ChatContext, completion: @escaping (Int, ResponseMessage) -> Void) async {
         var messageContent = renderChatContent(content: prompt, chatCtx: ctx, options: options)
         messageContent = replaceOptions(content: messageContent, selectedText: ctx.text, options: options)
@@ -151,7 +94,6 @@ class OpenAIService: AIChatService{
         }
     }
 
-    /// Handle subsequent user messages
     func chatFollow(index: Int, userMessage: String, completion: @escaping (Int, ResponseMessage) -> Void) async {
         updateQuery(message: .init(role: .user, content: userMessage)!)
         var newIndex = index
@@ -175,23 +117,21 @@ class OpenAIService: AIChatService{
         }
     }
 
-    /// Single turn chat process, including streaming processing and tool calls
     private func chatOneRound(index: inout Int, completion: @escaping (Int, ResponseMessage) -> Void) async throws {
-        print("index is \(index)")
         var hasTools = false
-        var toolCallsDict = [Int: ChatCompletionMessageToolCallParam]()
+        var toolCallsDict = [Int: OpenAIChatCompletionMessageToolCallParam]()
         var hasMessage = false
         var assistantMessage = ""
 
-        completion(index + 1, ResponseMessage(message: NSLocalizedString("Waiting", comment: "system info"), role: .system, new: true, status: .initial))
+        completion(index + 1, ResponseMessage(message: NSLocalizedString("Waiting", comment: "system info"), role: .system, new: true,
+status: .initial))
         for try await result in openAI.chatsStream(query: query) {
-            // Collect tool call information
             if let toolCalls = result.choices[0].delta.toolCalls {
                 hasTools = true
                 for f in toolCalls {
                     let toolCallID = f.index
                     if let existing = toolCallsDict[toolCallID] {
-                        let newToolCall = ChatCompletionMessageToolCallParam(
+                        let newToolCall = OpenAIChatCompletionMessageToolCallParam(
                             id: existing.id,
                             function: .init(
                                 arguments: existing.function.arguments + (f.function?.arguments ?? ""),
@@ -200,7 +140,7 @@ class OpenAIService: AIChatService{
                         )
                         toolCallsDict[toolCallID] = newToolCall
                     } else {
-                        let toolCall = ChatCompletionMessageToolCallParam(
+                        let toolCall = OpenAIChatCompletionMessageToolCallParam(
                             id: f.id!,
                             function: .init(
                                 arguments: f.function?.arguments ?? "",
@@ -212,7 +152,6 @@ class OpenAIService: AIChatService{
                 }
             }
 
-            // Process assistant's returned content
             if result.choices[0].finishReason == nil, let content = result.choices[0].delta.content {
                 var newMessage = false
                 if !hasMessage {
@@ -247,14 +186,13 @@ class OpenAIService: AIChatService{
         }
     }
 
-    // Internal method: Call tool functions
-    private func callTools(index: inout Int, toolCallsDict: [Int: ChatCompletionMessageToolCallParam], completion: @escaping (Int, ResponseMessage) -> Void) async throws -> [ChatQuery.ChatCompletionMessageParam] {
+    private func callTools(index: inout Int, toolCallsDict: [Int: OpenAIChatCompletionMessageToolCallParam], completion: @escaping (Int,
+ResponseMessage) -> Void) async throws -> [ChatQuery.ChatCompletionMessageParam] {
         guard let functions = tools else { return [] }
 
         index += 1
         print("tool index \(index)")
 
-        // Build tool mapping
         var functionMap = [String: FunctionDefinition]()
         for function in functions {
             functionMap[function.name] = function
@@ -268,7 +206,6 @@ class OpenAIService: AIChatService{
                 new: true,
                 status: .updating
             )
-            // If the tool definition has a template, render it and update the message
             if let funcDef = functionMap[tool.function.name],
                let template = funcDef.template {
                 toolMessage.message = renderTemplate(templateString: template, json: tool.function.arguments)
@@ -277,7 +214,6 @@ class OpenAIService: AIChatService{
             completion(index, toolMessage)
             print("\(tool.function.arguments)")
 
-            // Call different logic based on tool name
             if tool.function.name == dalle3Def.name {
                 let url = try await ImageGeneration.generateDalle3Image(openAI: openAI, arguments: tool.function.arguments)
                 messages.append(.tool(.init(content: url, toolCallId: tool.id)))
@@ -287,7 +223,8 @@ class OpenAIService: AIChatService{
             } else if tool.function.name == svgToolOpenAIDef.name {
                 _ = openSVGInBrowser(svgData: tool.function.arguments)
                 messages.append(.tool(.init(content: "display svg successfully", toolCallId: tool.id)))
-                let message = ResponseMessage(message: NSLocalizedString("display_svg", comment: ""), role: .tool, new: true, status: .finished)
+                let message = ResponseMessage(message: NSLocalizedString("display_svg", comment: ""), role: .tool, new: true, status:
+.finished)
                 completion(index, message)
             } else {
                 if let funcDef = functionMap[tool.function.name] {
@@ -306,8 +243,7 @@ class OpenAIService: AIChatService{
         return messages
     }
 
-    // Internal method: Construct ChatQuery object based on tool list and model
-    private static func createQuery(functions: [FunctionDefinition]?, model: OpenAIModel) -> ChatQuery {
+    private static func createQuery(functions: [FunctionDefinition]?, model: String) -> ChatQuery {
         var tools: [ChatQuery.ChatCompletionToolParam]? = nil
         if let functions = functions {
             var toolList: [ChatQuery.ChatCompletionToolParam] = [.init(function: dalle3Def), .init(function: svgToolOpenAIDef)]
@@ -322,24 +258,9 @@ class OpenAIService: AIChatService{
             tools = toolList
         }
 
-        if model == "o1-preview" || model == .o1_mini {
-            return ChatQuery(messages: [], model: model, tools: nil)
-        }
-
-        var reasoningEffort: ChatQuery.ReasoningEffort? = nil
-        if isReasoningModel(model){
-            reasoningEffort = switch Defaults[.openAIModelReasoningEffort]{
-                case "low": .low
-                case "medium": .medium
-                case "high": .high
-                default: .medium
-            }
-        }
-
         return ChatQuery(
             messages: [.init(role: .developer, content: systemPrompt())!],
             model: model,
-            reasoningEffort: reasoningEffort,
             tools: tools
         )
     }
