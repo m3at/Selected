@@ -1,18 +1,18 @@
-# icon 尺寸 
+# Icon Size 
 
-1024*1024 px 大小，背景透明，png 格式
+1024*1024 px size, transparent background, png format
 
-内容为 824*824 px
+Content should be 824*824 px
 
-# 生成办法
-创建一个名为 icons.iconset 的文件夹：
+# Generation Method
+Create a folder named `icons.iconset`:
 
 ``` bash
 mkdir icons.iconset 
 ```
 
-生成各种尺寸的 png 图片
-通过 终端 来快速创建各种不同尺寸要求的图片文件。
+Generate PNG images of various sizes.
+Use the Terminal to quickly create image files of different sizes.
 
 ```bash
 sips -z 16 16 icon.png -o icons.iconset/icon_16x16.png 
@@ -27,5 +27,5 @@ sips -z 512 512 icon.png -o icons.iconset/icon_512x512.png
 sips -z 1024 1024 icon.png -o icons.iconset/icon_512x512@2x.png 
 ```
 
-# 导入
-导入到 Assets 里的 AppIcon 里。
+# Import
+Import into `AppIcon` in `Assets`.

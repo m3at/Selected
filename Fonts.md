@@ -1,6 +1,6 @@
-macOS App 如何配置自定义字体。具体参考 https://stackoverflow.com/a/57412354
+How to configure custom fonts in macOS Apps. For specific details, refer to https://stackoverflow.com/a/57412354
 
-1. Create a folder named Fonts.
+1. Create a folder named `Fonts`.
 
 ![enter image description here](https://i.stack.imgur.com/vVCFC.png)
 
@@ -20,7 +20,7 @@ macOS App 如何配置自定义字体。具体参考 https://stackoverflow.com/a
 
 ![enter image description here](https://i.stack.imgur.com/ptkFy.png)
 
-6. 获取字体名称
+6. Get the font name
 
    ```swift
    for family: String in NSFontManager.shared.availableFontFamilies {
@@ -31,4 +31,6 @@ macOS App 如何配置自定义字体。具体参考 https://stackoverflow.com/a
    }
    ```
 
-   
+   ````
+
+DevDoc.md
