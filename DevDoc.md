@@ -1,14 +1,12 @@
-面向开发者的文档
+Developer Documentation
 
+## Custom Action List
 
+Configurable in "Settings - Applications".
 
-## 自定义操作列表
+The configuration file is located at `Library/Application Support/Selected/UserConfiguration.json`.
 
-在“设置-应用”中可以配置
-
-配置文件在 `Library/Application Support/Selected/UserConfiguration.json`。
-
-内容示例：
+Example content:
 
 ```json
 {
@@ -21,9 +19,9 @@
 }
 ```
 
-`appConditions.bundleID` 为应用的 bundleID。
-`actions` 为 `action.identifier` 列表。
+`appConditions.bundleID` is the bundle ID of the application.
+`actions` is a list of `action.identifier`.
 
-具体可以用哪些以及如何自定义 action，请看内置操作与自定义插件。
+For details on available actions and how to customize them, please refer to Built-in Actions and Custom Plugins.
 
-没有为应用配置 action 列表或者为应用配置的 action 列表为空时，将会显示所有可用操作。
+If no action list is configured for an application, or if the configured action list is empty, all available actions will be displayed.
