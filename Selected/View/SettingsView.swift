@@ -164,7 +164,7 @@ struct SettingsView: View {
                     }
                 }
                 .scrollContentBackground(.hidden)
-                .formStyle(.grouped) // 成组
+                .formStyle(.grouped) // Grouped style
                 .frame(width: 400)
 
             }.tabItem {
@@ -209,8 +209,8 @@ struct SettingsView: View {
 
 
 struct SpotlightShortcutView: View {
-    // 很奇怪把这行直接放在 SettingsView 里会，导致 Spotlight 里无法使用中文输入法
-    // 需要放在一个单独里的 View 里
+    // It's strange that placing this line directly in SettingsView causes the Spotlight Chinese input method to be unusable.
+    // It needs to be in a separate View.
     @Default(.spotlightShortcut) var spotlightShortcut
 
     var body: some View {
@@ -252,7 +252,7 @@ struct ShortcutView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .formStyle(.grouped) // 成组
+            .formStyle(.grouped) // Grouped style
             .frame(width: 400)
         }
     }

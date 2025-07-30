@@ -25,6 +25,7 @@ class ClipService {
 
     init() {
         changeCount = pasteboard.changeCount
+        // Add a global monitor for mouse down events to close the clip window when clicking outside
         NSEvent.addGlobalMonitorForEvents(matching:
                                             [.leftMouseDown, .rightMouseDown, .otherMouseDown]
         ) { (event) in
@@ -46,7 +47,7 @@ class ClipService {
             let eventType = event.type
             DispatchQueue.global(qos: .background).async {
                 if eventType == .leftMouseUp {
-                    // 如果是鼠标右键菜单栏里左键点击复制的话，需要等半秒才能从 pasteboard 里获取到复制的数据。
+                    // If it's a left-click copy from the right-click menu, wait half a second to get the copied data from pasteboard.
                     usleep(500000)
                 }
                 self.checkPasteboard()
@@ -86,7 +87,7 @@ class ClipService {
             return
         }
 
-        // 剪贴板内容发生变化，处理变化
+        // Clipboard content has changed, process the change
         print("pasteboard \(String(describing: pasteboard.types))")
         guard let clipData = ClipData(pasteboard: pasteboard) else {
             return
@@ -222,6 +223,7 @@ struct ClipData: Identifiable {
                 //                recognizeTextInImage(image)
             }
         }
+        // If the first type is HTML or RTF and plainText is still nil, it might be an invalid entry.
         if (types.first == .html || types.first == .rtf ) && self.plainText == nil {
             return nil
         }
@@ -315,7 +317,7 @@ private class EnterHotKeyManager {
 
         PersistenceController.shared.updateClipHistoryData(item)
 
-        // 粘贴时需要取消 key window，才能复制到当前的应用上。
+        // When pasting, need to resign key window to copy to the current application.
         ClipWindowManager.shared.resignKey()
         PressPasteKey()
         ClipWindowManager.shared.forceCloseWindow()
@@ -410,7 +412,7 @@ private class ClipWindowController: NSWindowController, NSWindowDelegate {
             contentRect: .zero,
             backing: .buffered,
             defer: false,
-            key: true // 成为 key 和 main window 就可以用一些快捷键，比如方向键，以及可以文本编辑。
+            key: true // Become key and main window to use shortcuts like arrow keys, and enable text editing.
         )
 
         super.init(window: window)
@@ -418,16 +420,16 @@ private class ClipWindowController: NSWindowController, NSWindowDelegate {
         window.center()
         window.level = .screenSaver
         window.contentView = NSHostingView(rootView: rootView)
-        window.delegate = self // 设置代理为自己来监听窗口事件
+        window.delegate = self // Set delegate to self to listen for window events
         window.makeKeyAndOrderFront(nil)
         if WindowPositionManager.shared.restorePosition(for: window) {
             return
         }
 
         let windowFrame = window.frame
-        let screenFrame = NSScreen.main?.visibleFrame ?? .zero // 获取主屏幕的可见区域
+        let screenFrame = NSScreen.main?.visibleFrame ?? .zero // Get the visible area of the main screen
 
-        // 确保窗口不会超出屏幕边缘
+        // Ensure the window does not go beyond the screen edges
         let x = (screenFrame.maxX - windowFrame.width) / 2
         let y = (screenFrame.maxY - windowFrame.height)*3 / 4
         window.setFrameOrigin(NSPoint(x: x, y: y))
@@ -450,7 +452,7 @@ private class ClipWindowController: NSWindowController, NSWindowDelegate {
     }
 
     func windowDidResignActive(_ notification: Notification) {
-        self.close() // 如果需要的话
+        self.close() // Close if needed
     }
 
     override func showWindow(_ sender: Any?) {

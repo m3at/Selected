@@ -180,13 +180,13 @@ public func executeCommand(
 
 private func findExecutablePath(commandName: String, currentDirectoryURL: URL? = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first, path: String? = ProcessInfo.processInfo.environment["PATH"]) -> URL? {
     let fileManager = FileManager.default
-    // 先检查是否是绝对路径
+    // First check if it's an absolute path
     let executableURL = URL(fileURLWithPath: commandName)
     if executableURL.isFileURL, fileManager.isExecutableFile(atPath: executableURL.path) {
         return executableURL
     }
 
-    // 检查命令是否在当前目录
+    // Check if the command is in the current directory
     if let currentDirectoryURL = currentDirectoryURL {
         let currentDirectoryExecutable = currentDirectoryURL.appendingPathComponent(commandName)
         if FileManager.default.isExecutableFile(atPath: currentDirectoryExecutable.path) {
@@ -194,7 +194,7 @@ private func findExecutablePath(commandName: String, currentDirectoryURL: URL? =
         }
     }
 
-    // 然后检查命令是否在 PATH 环境变量中的某个目录
+    // Then check if the command is in a directory in the PATH environment variable
     if let path = path {
         let paths = path.split(separator: ":").map { String($0) }
         for p in paths {
@@ -205,6 +205,6 @@ private func findExecutablePath(commandName: String, currentDirectoryURL: URL? =
         }
     }
 
-    // 如果找不到可执行文件返回 nil
+    // Return nil if the executable file is not found
     return nil
 }

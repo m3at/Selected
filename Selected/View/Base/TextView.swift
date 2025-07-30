@@ -16,13 +16,13 @@ struct TextView: NSViewRepresentable {
         let scrollView = NSScrollView()
         let textView = NSTextView()
 
-        // 配置滚动视图
+        // Configure scroll view
         scrollView.hasVerticalScroller = true
         scrollView.documentView = textView
         scrollView.backgroundColor = .clear
-        scrollView.drawsBackground = false // 确保不会绘制默认的背景
+        scrollView.drawsBackground = false // Ensure no default background is drawn
         
-        // 配置文本视图
+        // Configure text view
         textView.isEditable = false
         textView.autoresizingMask = [.width]
         textView.backgroundColor = .clear

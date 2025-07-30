@@ -13,7 +13,7 @@ struct RTFView: NSViewRepresentable {
     
     func makeNSView(context: Context) -> NSScrollView {
         let textView = NSTextView()
-        textView.isEditable = false // 设为false禁止编辑
+        textView.isEditable = false // Set to false to disable editing
         textView.autoresizingMask = [.width]
         textView.translatesAutoresizingMaskIntoConstraints = true
         if let attributedString =
@@ -26,18 +26,18 @@ struct RTFView: NSViewRepresentable {
             
             textView.textStorage?.setAttributedString(attributedString)
         }
-        textView.drawsBackground = false // 确保不会绘制默认的背景
+        textView.drawsBackground = false // Ensure no default background is drawn
         textView.backgroundColor = .clear
         
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
         scrollView.documentView = textView
         scrollView.backgroundColor = .clear
-        scrollView.drawsBackground = false // 确保不会绘制默认的背景
+        scrollView.drawsBackground = false // Ensure no default background is drawn
         return scrollView
     }
     
     func updateNSView(_ nsView: NSScrollView, context: Context) {
-        // 用于更新视图
+        // Used to update the view
     }
 }

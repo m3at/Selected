@@ -42,7 +42,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
                 return
             } else if let placemarks = placemarks {
                 if let placemark = placemarks.first {
-                    p = "\(placemark.name!), \(placemark.locality!), \(placemark.administrativeArea!), \(placemark.country!)"
+                    // Format the placemark information into a string
+                    p = "\(placemark.name ?? ""), \(placemark.locality ?? ""), \(placemark.administrativeArea ?? ""), \(placemark.country ?? "")"
                     DispatchQueue.main.async {
                         self.place = p
                     }

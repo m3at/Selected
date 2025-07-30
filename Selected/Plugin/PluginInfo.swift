@@ -115,7 +115,7 @@ struct Plugin: Decodable {
 }
 
 
-// PluginManager 管理各种插件。插件保存在 ”Library/Application Support/Selected/Extensions“。
+// PluginManager manages various plugins. Plugins are stored in "Library/Application Support/Selected/Extensions".
 class PluginManager: ObservableObject {
     private var extensionsDir: URL
     private let filemgr = FileManager.default
@@ -131,10 +131,10 @@ class PluginManager: ObservableObject {
     
     init(){
         let fileManager = FileManager.default
-        // 应用程序子目录
+        // Application subdirectory
         extensionsDir = appSupportURL.appendingPathComponent("Extensions", isDirectory: true)
         
-        // 检查目录是否存在，否则尝试创建它
+        // Check if the directory exists, otherwise try to create it
         if !fileManager.fileExists(atPath: extensionsDir.path) {
             try! fileManager.createDirectory(at: extensionsDir, withIntermediateDirectories: true, attributes: nil)
         }

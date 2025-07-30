@@ -94,6 +94,6 @@ public struct ShortcutBridge: Defaults.Bridge {
 }
 
 
-// 应用程序支持目录的URL
+// URL of the application support directory
 let appSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!.appendingPathComponent("Selected/", isDirectory: true)
 

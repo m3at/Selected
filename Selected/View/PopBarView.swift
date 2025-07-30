@@ -20,7 +20,7 @@ struct PopBarView: View {
     @Environment(\.openURL) var openURL
 
     var body: some View {
-        // spacing: 0， 让 button 紧邻，不要空隙
+        // spacing: 0, so that buttons are adjacent without gaps
         HStack(spacing: 0){
             ForEach(actions) { action in
                 BarButton(icon: action.actionMeta.icon, title: action.actionMeta.title , clicked: {
@@ -55,23 +55,23 @@ struct PopBarView: View {
 
 struct NumerberView: View {
     @State var value: String
-    @State private var isCopied = false // 用于控制动画效果
+    @State private var isCopied = false // Used to control animation effects
 
     var body: some View {
         Text(value)
             .fontWeight(.bold)
-            .foregroundColor(isCopied ? .blue : .primary) // 颜色变化动画
+            .foregroundColor(isCopied ? .blue : .primary) // Color change animation
             .onTapGesture {
                 let pasteboard = NSPasteboard.general
                 pasteboard.clearContents()
                 pasteboard.setString(value, forType: .string)
 
-                // 触发动画
+                // Trigger animation
                 withAnimation(.easeInOut(duration: 0.1)) {
                     isCopied = true
                 }
 
-                // 动画结束后恢复默认状态
+                // Restore default state after animation
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     withAnimation(.easeInOut(duration: 0.1)) {
                         isCopied = false

@@ -18,6 +18,7 @@ class SpotlightHotKeyManager {
     private var hotkey: HotKey?
 
     init(){
+        // Add a global monitor for mouse down events to close the spotlight window when clicking outside
         NSEvent.addGlobalMonitorForEvents(matching:
                                             [.leftMouseDown, .rightMouseDown, .otherMouseDown]
         ) { (event) in
@@ -98,7 +99,7 @@ private class WindowController: NSWindowController, NSWindowDelegate {
             contentRect: .zero,
             backing: .buffered,
             defer: false,
-            key: true // 成为 key 和 main window 就可以用一些快捷键，比如方向键，以及可以文本编辑。
+            key: true // Become key and main window to use shortcuts like arrow keys, and enable text editing.
         )
 
         super.init(window: window)
@@ -106,7 +107,7 @@ private class WindowController: NSWindowController, NSWindowDelegate {
         window.center()
         window.level = .screenSaver
         window.contentView = NSHostingView(rootView: rootView)
-        window.delegate = self // 设置代理为自己来监听窗口事件
+        window.delegate = self // Set delegate to self to listen for window events
         window.makeKeyAndOrderFront(nil)
         window.backgroundColor = .clear
         window.isOpaque = false
@@ -115,9 +116,9 @@ private class WindowController: NSWindowController, NSWindowDelegate {
         }
 
         let windowFrame = window.frame
-        let screenFrame = NSScreen.main?.visibleFrame ?? .zero // 获取主屏幕的可见区域
+        let screenFrame = NSScreen.main?.visibleFrame ?? .zero // Get the visible area of the main screen
 
-        // 确保窗口不会超出屏幕边缘
+        // Ensure the window does not go beyond the screen edges
         let x = (screenFrame.maxX - windowFrame.width) / 2
         let y = (screenFrame.maxY - windowFrame.height)*3 / 4
         window.setFrameOrigin(NSPoint(x: x, y: y))
@@ -140,7 +141,7 @@ private class WindowController: NSWindowController, NSWindowDelegate {
     }
 
     func windowDidResignActive(_ notification: Notification) {
-        self.close() // 如果需要的话
+        self.close() // Close if needed
     }
 
     override func showWindow(_ sender: Any?) {

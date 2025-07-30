@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-// MARK: - 窗口类型枚举
+// MARK: - Window Type Enum
 enum WindowType {
     case popBar
     case translation
@@ -16,21 +16,21 @@ enum WindowType {
     case text
 }
 
-// MARK: - 窗口位置策略
+// MARK: - Window Position Strategy
 enum WindowPositionStrategy {
     case centerScreen
     case nearMouse
-    case centerScreenOffset(CGFloat) // 允许垂直偏移，比如 3/4 位置
+    case centerScreenOffset(CGFloat) // Allows vertical offset, e.g., at 3/4 position
 }
 
-//// MARK: - 关闭窗口模式
+//// MARK: - Close Window Mode
 enum CloseWindowMode {
     case expanded
     case original
     case force
 }
 
-// MARK: - 窗口控制器协议
+// MARK: - Window Controller Protocol
 protocol WindowCtr: NSObjectProtocol {
     func close()
     func frame() -> NSRect
@@ -40,7 +40,7 @@ protocol WindowCtr: NSObjectProtocol {
     var onClose: (()->Void)? { get set }
 }
 
-// MARK: - 基础窗口控制器
+// MARK: - Base Window Controller
 class BaseWindowController: NSWindowController, NSWindowDelegate, WindowCtr {
     var onClose: (()->Void)?
     private var windowType: WindowType
@@ -59,7 +59,7 @@ class BaseWindowController: NSWindowController, NSWindowDelegate, WindowCtr {
          isKey: Bool = false, alpha: CGFloat = 1.0) {
         self.windowType = windowType
 
-        // 创建窗口
+        // Create window
         let window = FloatingPanel(
             contentRect: .init(x: 0, y: 0, width: size.width, height: size.height),
             backing: .buffered,
@@ -78,7 +78,7 @@ class BaseWindowController: NSWindowController, NSWindowDelegate, WindowCtr {
         window.level = .screenSaver
         window.contentView = NSHostingView(rootView: rootView)
         window.delegate = self
-        // 根据策略定位窗口
+        // Position window according to strategy
         positionWindow(using: positionStrategy, windowSize: size)
     }
 
@@ -129,7 +129,7 @@ class BaseWindowController: NSWindowController, NSWindowDelegate, WindowCtr {
         let screenFrame = screen.visibleFrame
         let windowWidth = window.frame.width
 
-        // 确保窗口不会超出屏幕边缘
+        // Ensure the window does not go beyond the screen edges
         let x = min(screenFrame.maxX - windowWidth,
                     max(mouseLocation.x - windowWidth/2, screenFrame.minX))
 
@@ -151,7 +151,7 @@ class BaseWindowController: NSWindowController, NSWindowDelegate, WindowCtr {
     }
 }
 
-// MARK: - 特化的窗口控制器
+// MARK: - Specialized Window Controllers
 class PopBarWindowController: BaseWindowController {
     init(rootView: AnyView) {
         super.init(rootView: rootView, windowType: .popBar, positionStrategy: .nearMouse, size: .zero)
@@ -197,11 +197,11 @@ class TextWindowController: BaseWindowController {
     }
 }
 
-// MARK: - 窗口管理器
+// MARK: - Window Manager
 class WindowManager {
     static let shared = WindowManager()
 
-    // TODO: 考虑使用锁保护此变量
+    // TODO: Consider using a lock to protect this variable
     private var windowCtr: WindowCtr?
 
     // When in showing SharingPicker, we should avoid close popbar window by accident.
@@ -270,7 +270,7 @@ class WindowManager {
         windowController.showWindow(nil)
         windowCtr = windowController
 
-        // 添加窗口关闭通知观察者
+        // Add window close notification observer
         NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
             object: windowController.window,

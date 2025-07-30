@@ -10,31 +10,31 @@ import Foundation
 import OpenAI
 
 public struct FunctionDefinition: Codable, Equatable {
-    /// 函数名称，必须只包含 a-z, A-Z, 0-9，下划线或连字符，最大长度 64。
+    /// Function name, must only contain a-z, A-Z, 0-9, underscore or hyphen, max length 64.
     public let name: String
-    /// 函数的描述信息
+    /// Description of the function
     public let description: String
-    /// 函数参数的 JSON Schema 描述
+    /// JSON Schema description of function parameters
     public let parameters: String
-    /// 执行该函数时所需的命令数组
+    /// Array of commands required to execute this function
     public var command: [String]?
-    /// 命令执行时的工作目录
+    /// Working directory for command execution
     public var workdir: String?
-    /// 是否显示执行结果，默认为 true
+    /// Whether to display execution results, defaults to true
     public var showResult: Bool? = true
-    /// 可选的模板字符串
+    /// Optional template string
     public var template: String?
 
-    /// 运行该函数对应的命令
+    /// Run the command corresponding to this function
     func Run(arguments: String, options: [String: String] = [:]) throws -> String? {
         guard let command = self.command else {
             return nil
         }
-        // 获取除第一个元素外的参数
+        // Get parameters excluding the first element
         var args = Array(command.dropFirst())
         args.append(arguments)
 
-        // 设置环境变量
+        // Set environment variables
         var env = [String: String]()
         options.forEach { key, value in
             env["SELECTED_OPTIONS_\(key.uppercased())"] = value
@@ -42,11 +42,11 @@ public struct FunctionDefinition: Codable, Equatable {
         if let path = ProcessInfo.processInfo.environment["PATH"] {
             env["PATH"] = "/opt/homebrew/bin:/opt/homebrew/sbin:" + path
         }
-        // 注意：这里假定 executeCommand(workdir:command:arguments:withEnv:) 已经在其他地方实现
+        // Note: This assumes executeCommand(workdir:command:arguments:withEnv:) is implemented elsewhere
         return try executeCommand(workdir: workdir!, command: command[0], arguments: args, withEnv: env)
     }
 
-    /// 解析 JSON Schema 参数为 FunctionParameters 对象
+    /// Parse JSON Schema parameters into FunctionParameters object
     func getParameters() -> AnyJSONSchema? {
         return try? JSONDecoder().decode(AnyJSONSchema.self, from: parameters.data(using: .utf8)!)
     }

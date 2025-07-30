@@ -10,7 +10,7 @@ import Foundation
 import OpenAI
 
 public struct ImageGeneration {
-    /// 根据传入参数调用 Dall-E 3 生成图片，并返回图片 URL
+    /// Call Dall-E 3 to generate an image based on the provided parameters and return the image URL
     public static func generateDalle3Image(openAI: OpenAI, arguments: String) async throws -> String {
         let promptData = try JSONDecoder().decode(Dalle3Prompt.self, from: arguments.data(using: .utf8)!)
         let imageQuery = ImagesQuery(prompt: promptData.prompt, model: .dall_e_3)
@@ -24,6 +24,6 @@ public struct ImageGeneration {
 }
 
 public struct Dalle3Prompt: Codable, Equatable {
-    /// 用于图片生成的提示语
+    /// Prompt for image generation
     public let prompt: String
 }

@@ -34,16 +34,16 @@ struct LaTeXImageProvider: InlineImageProvider, ImageProvider {
 
     @MainActor
     private func renderLatexImage(_ formula: String) async throws -> Image {
-        // 在MainActor上创建视图
+        // Create view on MainActor
         let latexView = LaTeX(formula)
             .frame(maxWidth: 500)
             .padding(.vertical, 0)
 
-        // 设置渲染器
+        // Set renderer
         let renderer = ImageRenderer(content: latexView)
         renderer.scale = NSScreen.main?.backingScaleFactor ?? 2.0
 
-        // 渲染为图像
+        // Render to image
         if let nsImage = renderer.nsImage {
             return Image(nsImage: nsImage)
         }
@@ -59,13 +59,14 @@ struct MarkdownWithLateXView: View {
 
     @Binding var markdownString: String
 
-    // 用于标识已处理过的标记
+    // Placeholder for processed block formulas
     private let latexBlockPlaceholder = "LATEX_BLOCK_"
 
-    // 正则表达式匹配 LaTeX 公式
+    // Regex for inline LaTeX formulas
     private let inlineLatexPattern = #"\$(.*?)\$"#
     private let inlineLatexPattern2 = #"\\\((.*?)\\\)"#
 
+    // Regex for block LaTeX formulas
     private let blockLatexPattern = #"\$\$(.*?)\$\$"#
     private let blockLatexPattern2 = #"\\\[(.*?)\\\]"#
 
@@ -73,7 +74,7 @@ struct MarkdownWithLateXView: View {
         let (processedMarkdown, latexFormulas) = processMarkdownWithLatex()
 
         return Markdown{processedMarkdown}.markdownBlockStyle(\.codeBlock) { configuration in
-            // 处理块级公式占位
+            // Process block formula placeholders
             if let id = extractLatexId(from: configuration.language ?? "", prefix: latexBlockPlaceholder),
                let formula = latexFormulas[id] {
                 LaTeX(formula)
@@ -142,14 +143,14 @@ struct MarkdownWithLateXView: View {
     }
 
 
-    // 提取 LaTeX 公式 ID
+    // Extract LaTeX formula ID
     private func extractLatexId(from text: String, prefix: String) -> String? {
         guard text.hasPrefix(prefix) else { return nil }
         return String(text.dropFirst(prefix.count))
     }
 
     private func blockLatex(markdown: String, latexFormulas: inout [String: String], blockLatexPattern: String)  -> (String){
-        // 处理块级公式
+        // Process block formulas
         let result = markdown
         var forumlaIDs = [String: String]()
 
@@ -169,7 +170,7 @@ struct MarkdownWithLateXView: View {
                     forumlaIDs[latexContent] = id
                 }
 
-                // 替换为自定义代码块
+                // Replace with custom code block
                 let replacement = "\n```\(latexBlockPlaceholder)\(id)\n```\n"
                 mutableResult.replaceCharacters(in: match.range, with: replacement)
             }
@@ -178,7 +179,7 @@ struct MarkdownWithLateXView: View {
     }
 
     private func inlineLatex(markdown: String, latexFormulas: inout [String: String], inlineLatexPattern: String)  -> (String) {
-        // 处理内联公式
+        // Process inline formulas
         let result = markdown
         var forumlaIDs = [String: String]()
 
@@ -199,7 +200,7 @@ struct MarkdownWithLateXView: View {
                     forumlaIDs[latexContent] = id
                 }
 
-                // 使用自定义 URL schema 的内联图像
+                // Use inline image with custom URL schema
                 let replacement = "![LaTeX formula](latex://\(id))"
                 mutableInlineResult.replaceCharacters(in: match.range, with: replacement)
             }
@@ -207,7 +208,7 @@ struct MarkdownWithLateXView: View {
         return String(mutableInlineResult)
     }
 
-    // 处理 Markdown 中的 LaTeX 公式，返回处理后的文本和公式字典
+    // Process LaTeX formulas in Markdown, returning processed text and formula dictionary
     private func processMarkdownWithLatex() -> (String, [String: String]) {
         var result = markdownString
         var latexFormulas = [String: String]()

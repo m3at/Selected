@@ -39,7 +39,7 @@ struct BarButton: View {
                 if isLoading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .gray))
-                        .scaleEffect(0.5, anchor: .center) // 根据需要调整大小和位置
+                        .scaleEffect(0.5, anchor: .center) // Adjust size and position as needed
                 }
             }
         }.frame(width: 40, height: 30)
@@ -61,14 +61,14 @@ struct BarButton: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
             })
             .popover(isPresented: $shouldPopover, content: {
-                // 增加 interactiveDismissDisabled。
-                // 否则有 popover 时，需要点击 action 使得 popover 消失然后再次点击才能产生 onclick 事件。
+                // Add interactiveDismissDisabled.
+                // Otherwise, when a popover is present, you need to click an action to dismiss the popover and then click again to trigger the onclick event.
                 Text(title).font(.headline).padding(5).interactiveDismissDisabled()
             })
     }
 }
 
-// BarButtonStyle: click、onHover 显示不同的颜色
+// BarButtonStyle: Display different colors for click and onHover
 struct BarButtonStyle: ButtonStyle {
     @State var isHover = false
     

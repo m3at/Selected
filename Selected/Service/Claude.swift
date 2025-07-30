@@ -9,7 +9,7 @@ import Foundation
 import SwiftAnthropic
 import Defaults
 
-// MARK: - 模型与扩展
+// MARK: - Model and Extensions
 
 public typealias ClaudeModel = Model
 
@@ -19,7 +19,7 @@ extension ClaudeModel: @retroactive CaseIterable {
     }
 }
 
-// MARK: - 工具使用数据模型
+// MARK: - Tool Use Data Model
 
 fileprivate struct ToolUse {
     let id: String
@@ -27,11 +27,11 @@ fileprivate struct ToolUse {
     var input: String
 }
 
-// MARK: - 工具管理模块
+// MARK: - Tool Management Module
 
 fileprivate struct ToolsManager {
 
-    /// 根据 FunctionDefinition 列表生成工具描述
+    /// Generate tool descriptions from a list of FunctionDefinition
     static func generateTools(from functions: [FunctionDefinition]?) -> [MessageParameter.Tool] {
         guard let functions = functions else { return [] }
         var tools = [MessageParameter.Tool]()
@@ -43,7 +43,7 @@ fileprivate struct ToolsManager {
         return tools
     }
 
-    /// 根据工具使用列表调用相应的工具函数，并返回工具调用结果消息
+    /// Call corresponding tool functions based on the tool use list and return tool call result messages
     static func callTools(
         index: inout Int,
         toolUseList: [ToolUse],
@@ -63,7 +63,7 @@ fileprivate struct ToolsManager {
                 let rawMessage = String(format: NSLocalizedString("calling_tool", comment: "tool message"), tool.name)
                 var message = ResponseMessage(message: rawMessage, role: .tool, new: true, status: .updating)
                 completion(index, message)
-                // 打开 SVG 浏览器预览
+                // Open SVG browser for preview
                 _ = openSVGInBrowser(svgData: tool.input)
                 message = ResponseMessage(message: String(format: NSLocalizedString("display_svg", comment: "")), role: .tool, new: true, status: .finished)
                 completion(index, message)
@@ -92,7 +92,7 @@ fileprivate struct ToolsManager {
     }
 }
 
-// MARK: - 查询管理模块
+// MARK: - Query Management Module
 
 struct QueryManager {
     private(set) var query: MessageParameter
@@ -141,7 +141,7 @@ struct QueryManager {
     }
 }
 
-// MARK: - 聊天服务模块
+// MARK: - Chat Service Module
 
 class ClaudeService: AIChatService {
     private let service: AnthropicService
@@ -159,14 +159,14 @@ class ClaudeService: AIChatService {
         self.prompt = prompt
         self.options = options
 
-        // 生成工具描述并添加 SVG 工具
+        // Generate tool descriptions and add SVG tool
         var toolsParam = ToolsManager.generateTools(from: tools)
         toolsParam.append(svgToolClaudeDef)
         self.tools = tools
         self.queryManager = QueryManager(model: .other(Defaults[.claudeModel]), systemPrompt: systemPrompt(), tools: toolsParam)
     }
 
-    /// 单次聊天：仅发送一条消息，返回流式响应内容
+    /// Single chat: send only one message, return streaming response content
     func chatOne(selectedText: String, completion: @escaping (_: String) -> Void) async {
         let userMessage = replaceOptions(content: prompt, selectedText: selectedText, options: options)
         let parameters = MessageParameter(
@@ -187,7 +187,7 @@ class ClaudeService: AIChatService {
         }
     }
 
-    /// 聊天跟进：追加用户消息，并循环处理直到得到完整回复
+    /// Chat follow-up: append user message, and process in a loop until a complete reply is received
     func chatFollow(index: Int, userMessage: String, completion: @escaping (_: Int, _: ResponseMessage) -> Void) async {
         queryManager.update(with: .init(role: .user, content: .text(userMessage)))
         var newIndex = index
@@ -211,7 +211,7 @@ class ClaudeService: AIChatService {
         }
     }
 
-    /// 根据聊天上下文进行整体对话
+    /// Conduct a conversation based on the chat context
     func chat(ctx: ChatContext, completion: @escaping (_: Int, _: ResponseMessage) -> Void) async {
         var userMessage = renderChatContent(content: prompt, chatCtx: ctx, options: options)
         userMessage = replaceOptions(content: userMessage, selectedText: ctx.text, options: options)
@@ -237,7 +237,7 @@ class ClaudeService: AIChatService {
         }
     }
 
-    /// 单轮聊天处理：流式接收回复，并处理可能的工具调用
+    /// Single round chat processing: receive reply in stream, and handle possible tool calls
     private func chatOneRound(index: inout Int, completion: @escaping (_: Int, _: ResponseMessage) -> Void) async throws {
         print("index is \(index)")
         var assistantMessage = ""
@@ -296,14 +296,14 @@ class ClaudeService: AIChatService {
             contents.append(.thinking(thinking, signature))
         }
 
-        // 将工具调用封装到查询记录中
+        // Encapsulate tool calls into query records
         for tool in toolUseList {
             let input = try JSONDecoder().decode(SwiftAnthropic.MessageResponse.Content.Input.self, from: tool.input.data(using: .utf8)!)
             contents.append(.toolUse(tool.id, tool.name, input))
         }
         queryManager.update(with: .init(role: .assistant, content: .list(contents)))
 
-        // 调用工具，并将工具结果追加到查询记录
+        // Call tools and append tool results to query records
         if let functions = tools, !toolUseList.isEmpty {
             let toolMessages = try await ToolsManager.callTools(index: &index, toolUseList: toolUseList, with: functions, options: options, completion: completion)
             if !toolMessages.isEmpty {
@@ -313,11 +313,11 @@ class ClaudeService: AIChatService {
     }
 }
 
-let ClaudeWordTrans = ClaudeService(prompt: "翻译以下单词到中文，详细说明单词的不同意思，并且给出原语言的例句与翻译。使用 markdown 的格式回复，要求第一行标题为单词。单词为：{selected.text}")
+let ClaudeWordTrans = ClaudeService(prompt: "Translate the following word to Chinese, explaining its different meanings in detail, and providing examples in the original language with translations. Use markdown format for the reply, with the word as the first line title. The word is: {selected.text}")
 
-let ClaudeTrans2Chinese = ClaudeService(prompt:"你是一位精通简体中文的专业翻译。翻译指定的内容到中文。规则：请直接回复翻译后的内容。内容为：{selected.text}")
+let ClaudeTrans2Chinese = ClaudeService(prompt:"You are a professional translator proficient in Simplified Chinese. Translate the following content into Chinese. Rule: reply with the translated content directly. The content is: {selected.text}")
 
-let ClaudeTrans2English = ClaudeService(prompt:"You are a professional translator proficient in English. Translate the following content into English. Rule: reply with the translated content directly. The content is：{selected.text}")
+let ClaudeTrans2English = ClaudeService(prompt:"You are a professional translator proficient in English. Translate the following content into English. Rule: reply with the translated content directly. The content is: {selected.text}")
 
 
 let svgToolClaudeDef = MessageParameter.Tool.function(

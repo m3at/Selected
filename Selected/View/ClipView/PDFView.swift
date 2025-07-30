@@ -16,7 +16,7 @@ struct PDFKitRepresentedView: NSViewRepresentable {
         let pdfView = PDFView()
         pdfView.autoScales = true // Automatically scale the PDF to fit the view
         pdfView.autoresizingMask = [.width, .height]
-        // 加载 PDF 文档
+        // Load PDF document
         if let document = PDFDocument(url: url) {
             pdfView.document = document
         }
@@ -24,6 +24,6 @@ struct PDFKitRepresentedView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: PDFView, context: Context) {
-        // 这个方法里面可以留空，因为 PDFView 的内容不会经常改变
+        // This method can be left empty as the PDFView content does not change frequently
     }
 }

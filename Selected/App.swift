@@ -16,7 +16,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setDefaultAppForCustomFileType()
-        // 不需要主窗口，不需要显示在 dock 上
+        // No main window needed, and don't show in dock
         NSApp.setActivationPolicy(NSApplication.ActivationPolicy.accessory)
         requestAccessibilityPermissions()
 
@@ -38,8 +38,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             SpotlightHotKeyManager.shared.registerHotKey()
         }
 
-        // 注册空间改变通知
-        // 这里不能使用 NotificationCenter.default.
+        // Register for space change notifications
+        // NotificationCenter.default. is not applicable here.
         NSWorkspace.shared.notificationCenter.addObserver(self,
                                                           selector: #selector(spaceDidChange),
                                                           name: NSWorkspace.activeSpaceDidChangeNotification,
@@ -47,7 +47,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func spaceDidChange() {
-        // 当空间改变时触发
+        // Triggered when the space changes
         ClipWindowManager.shared.forceCloseWindow()
         ChatWindowManager.shared.closeAllWindows(.force)
         SpotlightWindowManager.shared.forceCloseWindow()
@@ -55,21 +55,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
-            // 处理打开的文件
+            // Handle opened files
             print("\(url.path)")
             PluginManager.shared.install(url: url)
         }
     }
 
     func applicationWillBecomeActive(_ notification: Notification) {
-        // 当 app 变为活跃时关闭全局热键
+        // Disable global hotkeys when the app becomes active
         ClipboardHotKeyManager.shared.unregisterHotKey()
         SpotlightHotKeyManager.shared.unregisterHotKey()
     }
 
     func applicationDidResignActive(_ notification: Notification) {
         if Defaults[.enableClipboard] {
-            // 当 app 退到后台时开启全局热键
+            // Enable global hotkeys when the app goes to the background
             ClipboardHotKeyManager.shared.registerHotKey()
         }
         SpotlightHotKeyManager.shared.registerHotKey()
@@ -97,7 +97,7 @@ struct SelectedApp: App {
             Label {
                 Text("Selected")
             } icon: {
-                Image(systemName: "pencil.and.scribble")
+                Image(systemName: "pencil.scribble")
                     .resizable()
                     .renderingMode(.template)
                     .scaledToFit()
@@ -116,15 +116,15 @@ struct SelectedApp: App {
 
 
 func requestAccessibilityPermissions() {
-    // 判断权限
+    // Check permissions
     let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
     let accessEnabled = AXIsProcessTrustedWithOptions(options)
 
     print("accessEnabled: \(accessEnabled)")
 
     if !accessEnabled {
-        // 请求权限
-        // 注意不能是 sandbox，否则辅助功能里无法看到这个 app
+        // Request permissions
+        // Note: This cannot be a sandbox app, otherwise it won't be visible in Accessibility settings.
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
 }
@@ -132,7 +132,7 @@ func requestAccessibilityPermissions() {
 let kExpandedLength: CGFloat = 100
 
 
-// 监听鼠标移动
+// Monitor mouse movement
 func monitorMouseMove() {
     var eventState = EventState()
     var hoverWorkItem: DispatchWorkItem?
@@ -169,10 +169,14 @@ func monitorMouseMove() {
                             }
                             hoverWorkItem = workItem
                             let delay = 0.2
-                            // 在 0.2 秒后执行
-                            // 解决，3 连击选定整行是从 2 连击加一次连击产生的。所以会在短时间内出现2个2次连续鼠标左键释放。
-                            // 导致获取选定文本两次，绘制、关闭、再绘制窗口，造成窗口闪烁。
-                            // 如果 0.2 秒内再次有点击的话，就取消之前的绘制窗口，这样能避免窗口闪烁。
+                            // Execute after 0.2 seconds
+                            // Fix: In VS Code and Zed, Cmd+C can copy the entire line when no text is selected.
+                            // However, these apps only get selected text via Cmd+C.
+                            // This leads to the pop-up bar appearing regardless of where you click if we only listen for leftMouseUp.
+                            // Therefore, we change it to: if the last leftMouseUp time was less than 0.5s, it's a double-click.
+                            // Double-click selects a word, triple-click selects a line.
+                            // Also, we listen for Cmd+A (select all) and Cmd+Shift+Arrow (partial selection).
+                            // If another left click occurs within 0.2 seconds, cancel the previous window drawing. This prevents window flickering.
                             DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
                         }
                     }
@@ -191,14 +195,12 @@ func monitorMouseMove() {
 }
 
 struct EventState {
-    // 在 vscode、zed 里，使用在没有任何选择的文本时，cmd+c 可以复制整行。
-    // 而这两个 app 只能通过 cmd+c 获取选中的文本。
-    // 导致如果我们只监听 leftMouseUp 的话，会导致无论点击在哪里，都会形式悬浮栏。
-    // 所以这里，我们改成，如果当前是 leftMouseUp：
-    // 1. 判断上次 leftMouseUp 的时间是否小于 0.5s，这个是鼠标左键连击的判断方法
-    //    双击选词，三击选行。
-    // 2. 判断上次是否是 leftMouseDragged。这表示左键单击+拖拽选择文本。
-    // 另外我们还监听了：cmd+A（全选），以及 cmd+shift+arrow(部分选择)。
+    // In VS Code and Zed, Cmd+C can copy the entire line when no text is selected.
+    // However, these apps only get selected text via Cmd+C.
+    // This leads to the pop-up bar appearing regardless of where you click if we only listen for leftMouseUp.
+    // Therefore, we change it to: if the last leftMouseUp time was less than 0.5s, it's a double-click.
+    // Double-click selects a word, triple-click selects a line.
+    // Also, we listen for Cmd+A (select all) and Cmd+Shift+Arrow (partial selection).
     var lastLeftMouseUPTime = 0.0
     var lastMouseEventType: NSEvent.EventType = .leftMouseUp
 
@@ -236,4 +238,3 @@ let eventTypeMap: [ NSEvent.EventType: String] = [
     .leftMouseDragged: "leftMouseDragged",
     .scrollWheel: "scrollWheel"
 ]
-

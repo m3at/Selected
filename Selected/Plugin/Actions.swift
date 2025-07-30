@@ -352,7 +352,7 @@ func GetAllActions() -> [PerformAction] {
     return PluginManager.shared.allActions
 }
 
-// GetActions 根据上下文获得当前支持的 action 列表。比如根据当前窗口的应用选择 action 列表。
+// GetActions obtains the list of currently supported actions based on the context. For example, it selects the action list based on the current window's application.
 func GetActions(ctx: SelectedTextContext) -> [PerformAction] {
     var actions = [ActionID]()
     if let condition = ConfigurationManager.shared.getAppCondition(bundleID: ctx.BundleID) {

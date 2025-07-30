@@ -41,8 +41,7 @@ let dalle3Def = ChatQuery.ChatCompletionToolParam.FunctionDefinition(
                         "prompt":
                                 .init(
                                     fields: [
-                                        .type( .string),
-                                        .description( "the generated prompt sent to dalle3"),
+                                        .type( .string), .description("the generated prompt sent to dalle3"),
                                             ]
                                     )
                         ]
@@ -64,7 +63,7 @@ class OpenAIService: AIChatService{
     private var query: ChatQuery
     private var options: [String: String]
 
-    // 初始化时传入 prompt、工具列表和其他选项
+    // Initialize with prompt, tool list, and other options
     init(prompt: String, tools: [FunctionDefinition]? = nil, options: [String: String] = [:]) {
         self.prompt = prompt
         self.tools = tools
@@ -78,7 +77,7 @@ class OpenAIService: AIChatService{
         self.query = OpenAIService.createQuery(functions: tools, model: Defaults[.openAIModel])
     }
 
-    // 初始化时直接传入 prompt 和模型
+    // Initialize directly with prompt and model
     init(prompt: String, model: OpenAIModel) {
         self.prompt = prompt
         self.tools = nil
@@ -92,7 +91,7 @@ class OpenAIService: AIChatService{
         self.query = OpenAIService.createQuery(functions: tools, model: model)
     }
 
-    // 更新对话查询
+    // Update conversation query
     private func updateQuery(message: ChatQuery.ChatCompletionMessageParam) {
         var messages = query.messages
         messages.append(message)
@@ -105,7 +104,7 @@ class OpenAIService: AIChatService{
         query = ChatQuery(messages: updatedMessages, model: query.model,  reasoningEffort: query.reasoningEffort, tools: query.tools)
     }
 
-    /// 单轮对话，适合简单返回结果（流式返回）
+    /// Single turn conversation, suitable for simple result returns (streaming return)
     func chatOne(selectedText: String, completion: @escaping (String) -> Void) async {
         var messages = query.messages
         let messageContent = replaceOptions(content: prompt, selectedText: selectedText, options: options)
@@ -123,7 +122,7 @@ class OpenAIService: AIChatService{
         }
     }
 
-    /// 发起对话，会进行多轮聊天直至收到 assistant 的回答
+    /// Initiate conversation, will have multiple turns until assistant's reply is received
     func chat(ctx: ChatContext, completion: @escaping (Int, ResponseMessage) -> Void) async {
         var messageContent = renderChatContent(content: prompt, chatCtx: ctx, options: options)
         messageContent = replaceOptions(content: messageContent, selectedText: ctx.text, options: options)
@@ -150,7 +149,7 @@ class OpenAIService: AIChatService{
         }
     }
 
-    /// 处理用户后续的消息
+    /// Handle subsequent user messages
     func chatFollow(index: Int, userMessage: String, completion: @escaping (Int, ResponseMessage) -> Void) async {
         updateQuery(message: .init(role: .user, content: userMessage)!)
         var newIndex = index
@@ -174,7 +173,7 @@ class OpenAIService: AIChatService{
         }
     }
 
-    /// 单轮聊天流程，包括流式处理和工具调用
+    /// Single turn chat process, including streaming processing and tool calls
     private func chatOneRound(index: inout Int, completion: @escaping (Int, ResponseMessage) -> Void) async throws {
         print("index is \(index)")
         var hasTools = false
@@ -184,7 +183,7 @@ class OpenAIService: AIChatService{
 
         completion(index + 1, ResponseMessage(message: NSLocalizedString("Waiting", comment: "system info"), role: .system, new: true, status: .initial))
         for try await result in openAI.chatsStream(query: query) {
-            // 收集工具调用信息
+            // Collect tool call information
             if let toolCalls = result.choices[0].delta.toolCalls {
                 hasTools = true
                 for f in toolCalls {
@@ -211,7 +210,7 @@ class OpenAIService: AIChatService{
                 }
             }
 
-            // 处理 assistant 返回的内容
+            // Process assistant's returned content
             if result.choices[0].finishReason == nil, let content = result.choices[0].delta.content {
                 var newMessage = false
                 if !hasMessage {
@@ -246,14 +245,14 @@ class OpenAIService: AIChatService{
         }
     }
 
-    // 内部方法：调用工具函数
+    // Internal method: Call tool functions
     private func callTools(index: inout Int, toolCallsDict: [Int: ChatCompletionMessageToolCallParam], completion: @escaping (Int, ResponseMessage) -> Void) async throws -> [ChatQuery.ChatCompletionMessageParam] {
         guard let functions = tools else { return [] }
 
         index += 1
         print("tool index \(index)")
 
-        // 构建工具映射
+        // Build tool mapping
         var functionMap = [String: FunctionDefinition]()
         for function in functions {
             functionMap[function.name] = function
@@ -267,7 +266,7 @@ class OpenAIService: AIChatService{
                 new: true,
                 status: .updating
             )
-            // 如果工具定义中有模板，则渲染后更新消息
+            // If the tool definition has a template, render it and update the message
             if let funcDef = functionMap[tool.function.name],
                let template = funcDef.template {
                 toolMessage.message = renderTemplate(templateString: template, json: tool.function.arguments)
@@ -276,7 +275,7 @@ class OpenAIService: AIChatService{
             completion(index, toolMessage)
             print("\(tool.function.arguments)")
 
-            // 根据工具名称调用不同的逻辑
+            // Call different logic based on tool name
             if tool.function.name == dalle3Def.name {
                 let url = try await ImageGeneration.generateDalle3Image(openAI: openAI, arguments: tool.function.arguments)
                 messages.append(.tool(.init(content: url, toolCallId: tool.id)))
@@ -305,7 +304,7 @@ class OpenAIService: AIChatService{
         return messages
     }
 
-    // 内部方法：根据工具列表和模型构造 ChatQuery 对象
+    // Internal method: Construct ChatQuery object based on tool list and model
     private static func createQuery(functions: [FunctionDefinition]?, model: OpenAIModel) -> ChatQuery {
         var tools: [ChatQuery.ChatCompletionToolParam]? = nil
         if let functions = functions {

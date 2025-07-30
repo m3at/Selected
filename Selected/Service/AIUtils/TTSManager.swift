@@ -14,34 +14,34 @@ import OpenAI
 
 public class TTSManager {
 
-    // MARK: - 属性
+    // MARK: - Properties
 
-    /// 系统语音合成器，用于当 OpenAI APIKey 为空时调用系统 TTS
+    /// System speech synthesizer, used when OpenAI APIKey is empty to call system TTS
     private static let speechSynthesizer = AVSpeechSynthesizer()
 
-    /// OpenAI 语音合成播放使用的音频播放器
+    /// Audio player for OpenAI voice synthesis playback
     private static var audioPlayer: AVAudioPlayer?
 
-    /// TTS 缓存数据结构
+    /// TTS cache data structure
     private struct VoiceData {
         var data: Data
         var lastAccessTime: Date
     }
 
-    /// 缓存字典，key 为文本的 hash 值
+    /// Cache dictionary, key is the hash value of the text
     private static var voiceDataCache = [Int: VoiceData]()
 
-    // MARK: - 缓存管理
+    // MARK: - Cache Management
 
-    /// 清理缓存中超过 120 秒未使用的数据
+    /// Clear unused data in the cache that exceeds 120 seconds
     private static func clearExpiredVoiceData() {
         let now = Date()
         voiceDataCache = voiceDataCache.filter { $0.value.lastAccessTime.addingTimeInterval(120) >= now }
     }
 
-    // MARK: - 系统 TTS
+    // MARK: - System TTS
 
-    /// 使用系统语音合成（AVSpeechSynthesizer）朗读文本
+    /// Use system speech synthesis (AVSpeechSynthesizer) to read text
     private static func systemSpeak(_ text: String) {
         speechSynthesizer.stopSpeaking(at: .word)
         let utterance = AVSpeechUtterance(string: text)
@@ -51,9 +51,9 @@ public class TTSManager {
         speechSynthesizer.speak(utterance)
     }
 
-    // MARK: - OpenAI TTS 调用
+    // MARK: - OpenAI TTS Call
 
-    /// 通过 OpenAI API 调用语音合成，并直接播放生成的语音
+    /// Call voice synthesis via OpenAI API and play the generated voice directly
     private static func play(text: String) async {
         clearExpiredVoiceData()
         let hashValue = text.hash
@@ -71,7 +71,7 @@ public class TTSManager {
 
         let configuration = OpenAI.Configuration(token: Defaults[.openAIAPIKey],
                                                  host: Defaults[.openAIAPIHost],
-                                                 timeoutInterval: 60.0)
+                                                 timeoutInterval: 60.0, parsingOptions: .relaxed)
         let openAI = OpenAI(configuration: configuration)
         let model = Defaults[.openAITTSModel]
         let instructions = model == .gpt_4o_mini_tts ? Defaults[.openAITTSInstructions] : ""
@@ -93,7 +93,7 @@ public class TTSManager {
         }
     }
 
-    /// 通过 OpenAI API 获取 TTS 音频数据，适用于需要自定义播放方式（例如在新窗口中播放）的场景
+    /// Fetch TTS audio data via OpenAI API, suitable for scenarios requiring custom playback (e.g., playing in a new window)
     private static func fetchTTSData(text: String) async -> Data? {
         clearExpiredVoiceData()
         let hashValue = text.hash
@@ -104,7 +104,7 @@ public class TTSManager {
 
         let configuration = OpenAI.Configuration(token: Defaults[.openAIAPIKey],
                                                  host: Defaults[.openAIAPIHost],
-                                                 timeoutInterval: 60.0)
+                                                 timeoutInterval: 60.0, parsingOptions: .relaxed)
         let openAI = OpenAI(configuration: configuration)
         let model = Defaults[.openAITTSModel]
         let instructions = model == .gpt_4o_mini_tts ? Defaults[.openAITTSInstructions] : ""
@@ -124,30 +124,30 @@ public class TTSManager {
         }
     }
 
-    // MARK: - 综合调用入口
+    // MARK: - Comprehensive Call Entry Point
 
-    /// 综合 TTS 播放函数，根据 OpenAI APIKey 和文本内容决定调用系统 TTS 还是 OpenAI TTS
+    /// Comprehensive TTS playback function, determines whether to call system TTS or OpenAI TTS based on OpenAI APIKey and text content
     ///
     /// - Parameters:
-    ///   - text: 待朗读文本
-    ///   - view: 是否以视图窗口方式播放（适用于多句文本）；默认为 true
+    ///   - text: Text to be read aloud
+    ///   - view: Whether to play in a view window (suitable for multiple sentences); defaults to true
     ///
-    /// 如果 OpenAI APIKey 为空，则调用系统 TTS，否则：
-    /// - 当文本为单词或 view 为 false 时直接播放语音；
-    /// - 否则，获取 TTS 数据后在新窗口中播放（需 WindowManager 实现相关方法）。
+    /// If OpenAI APIKey is empty, system TTS is called. Otherwise:
+    /// - If the text is a word or view is false, play the voice directly.
+    /// - Otherwise, get TTS data and play it in a new window (requires WindowManager to implement relevant methods).
     public static func speak(_ text: String, view: Bool = true) async {
-        // 如果未配置 OpenAI APIKey，则调用系统语音
+        // If OpenAI APIKey is not configured, call system voice
         if Defaults[.openAIAPIKey].isEmpty {
             systemSpeak(text)
         } else {
-            // isWord(str:) 为自定义辅助方法，判断文本是否为单词（需自行实现）
+            // isWord(str:) is a custom helper method to determine if the text is a word (needs to be implemented by you)
             if isWord(str: text) || !view {
                 await play(text: text)
             } else {
                 if let data = await fetchTTSData(text: text) {
                     DispatchQueue.main.async {
-                        // WindowManager.shared.createAudioPlayerWindow(_:) 为自定义方法，
-                        // 用于在新窗口中播放音频数据，需自行实现
+                        // WindowManager.shared.createAudioPlayerWindow(_:) is a custom method
+                        // used to play audio data in a new window; implement it yourself.
                         WindowManager.shared.createAudioPlayerWindow(data)
                     }
                 }
@@ -155,7 +155,7 @@ public class TTSManager {
         }
     }
 
-    /// 停止所有正在进行的语音合成播放，包括系统 TTS 与 OpenAI TTS
+    /// Stop all ongoing speech synthesis playback, including system TTS and OpenAI TTS
     public static func stopSpeak() {
         speechSynthesizer.stopSpeaking(at: .word)
         audioPlayer?.stop()

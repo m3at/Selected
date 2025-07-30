@@ -129,4 +129,3 @@ struct ActionListView: View {
 #Preview {
     ActionListView()
 }
-

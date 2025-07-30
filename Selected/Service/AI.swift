@@ -50,10 +50,10 @@ struct Translation {
         switch Defaults[.aiService] {
             case "OpenAI":
                 if isWord(str: content) {
-                    let OpenAIWordTrans = OpenAIService(prompt: "翻译以下单词到中文，详细说明单词的不同意思，并且给出原语言的例句与翻译。使用 markdown 的格式回复，要求第一行标题为单词。单词为：{selected.text}", model: Defaults[.openAITranslationModel])
+                    let OpenAIWordTrans = OpenAIService(prompt: "Translate the following word to Chinese, explaining its different meanings in detail, and providing examples in the original language with translations. Use markdown format for the reply, with the word as the first line title. The word is: {selected.text}", model: Defaults[.openAITranslationModel])
                     await OpenAIWordTrans.chatOne(selectedText: content, completion: completion)
                 } else {
-                    let OpenAITrans2Chinese = OpenAIService(prompt:"你是一位精通简体中文的专业翻译。翻译指定的内容到中文。规则：请直接回复翻译后的内容。内容为：{selected.text}", model: Defaults[.openAITranslationModel])
+                    let OpenAITrans2Chinese = OpenAIService(prompt:"You are a professional translator proficient in Simplified Chinese. Translate the following content into Chinese. Rule: reply with the translated content directly. The content is: {selected.text}", model: Defaults[.openAITranslationModel])
                     await OpenAITrans2Chinese.chatOne(selectedText: content, completion: completion)
                 }
             case "Claude":
@@ -194,25 +194,25 @@ struct SVGData: Codable, Equatable {
     public let raw: String
 }
 
-// 输入为 svg 的原始数据，要求保存到一个临时文件里，然后通过默认浏览器打开这个文件。
+// Input is raw SVG data, save it to a temporary file and open it with the default browser.
 func openSVGInBrowser(svgData: String) -> Bool {
     do {
         let data = try JSONDecoder().decode(SVGData.self, from: svgData.data(using: .utf8)!)
 
-        // 创建临时文件路径
+        // Create temporary file path
         let tempDir = FileManager.default.temporaryDirectory
         let tempFile = tempDir.appendingPathComponent("temp_svg_\(UUID().uuidString).svg")
 
-        // 将 SVG 数据写入临时文件
+        // Write SVG data to the temporary file
         try data.raw.write(to: tempFile, atomically: true, encoding: .utf8)
 
-        // 使用默认浏览器打开文件
+        // Open the file with the default browser
         DispatchQueue.global().async {
             NSWorkspace.shared.open(tempFile)
         }
         return true
     } catch {
-        print("打开 SVG 文件时发生错误: \(error.localizedDescription)")
+        print("Error opening SVG file: \(error.localizedDescription)")
         return false
     }
 }

@@ -136,12 +136,12 @@ class ClipViewModel: ObservableObject {
 }
 
 
-// MARK: - 剪贴板项行（根据剪贴板数据类型展示不同内容）
+// MARK: - Clipboard Item Row (Displays different content based on clipboard data type)
 struct ClipRowView: View {
     let clip: ClipHistoryData
 
     var body: some View {
-        // 获取 clip 中的第一个 item
+        // Get the first item from clip
         if let item = clip.getItems().first, let typeString = item.type{
             let type = NSPasteboard.PasteboardType(rawValue: typeString)
             switch type {
@@ -209,26 +209,26 @@ struct ClipView: View {
     @ObservedObject var viewModel = ClipViewModel.shared
     @FocusState private var isFocused: Bool
 
-    // 添加搜索状态
+    // Add search state
     @State private var searchText = ""
 
-    // 添加过滤后的结果计算属性
+    // Add computed property for filtered results
     private var filteredClips: [ClipHistoryData] {
         if searchText.isEmpty {
             return Array(clips)
         } else {
             return clips.filter { clip in
-                // 搜索纯文本内容
+                // Search plain text content
                 if let plainText = clip.plainText, plainText.localizedCaseInsensitiveContains(searchText) {
                     return true
                 }
 
-                // 搜索 URL
+                // Search URL
                 if let url = clip.url, url.localizedCaseInsensitiveContains(searchText) {
                     return true
                 }
 
-                // 如果是文件，搜索文件名
+                // If it's a file, search the filename
                 if let item = clip.getItems().first,
                    let type = item.type,
                    NSPasteboard.PasteboardType(type) == .fileURL,
@@ -271,7 +271,7 @@ struct ClipView: View {
                         }
                         .frame(width: 250)
                         .frame(minWidth: 250, maxWidth: 250)
-                        // 当搜索文本变化时，默认选择第一条并滚动到最上面
+                        // When search text changes, default to selecting the first item and scrolling to the top
                         .onChange(of: searchText) { _ in
                             if !filteredClips.isEmpty {
                                 viewModel.selectedItem = filteredClips.first
@@ -284,7 +284,7 @@ struct ClipView: View {
                 }
             }
             .onAppear {
-                ClipViewModel.shared.selectedItem = clips.first
+                viewModel.selectedItem = clips.first
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     self.isFocused = true
                 }
@@ -294,7 +294,7 @@ struct ClipView: View {
         .frame(width: 800, height: 400)
     }
 
-    // MARK: - 处理方向键事件更新选中项
+    // MARK: - Handle arrow key events to update selected item
     private func handleArrowKey(_ direction: CustomSearchField.ArrowDirection) {
         guard !filteredClips.isEmpty else { return }
         if direction == .down {
@@ -314,21 +314,21 @@ struct ClipView: View {
         }
     }
 
-    // MARK: - 删除剪贴板项并更新选中状态
+    // MARK: - Delete clipboard item and update selection status
     func delete(_ clipData: ClipHistoryData) {
         if let selectedItem = viewModel.selectedItem {
             let selectedItemIdx = filteredClips.firstIndex(of: selectedItem) ?? 0
             let idx = filteredClips.firstIndex(of: clipData) ?? 0
 
-            // 计算删除后，需要选中的新条目的索引
+            // Calculate the index of the new item to be selected after deletion
             let newIndexAfterDeletion: Int?
             if selectedItem == clipData {
                 if filteredClips.count > idx + 1 {
-                    newIndexAfterDeletion = idx // 选择下一个
+                    newIndexAfterDeletion = idx // Select next
                 } else if idx > 0 {
-                    newIndexAfterDeletion = idx - 1 // 选择前一个
+                    newIndexAfterDeletion = idx - 1 // Select previous
                 } else {
-                    newIndexAfterDeletion = nil // 没有其他条目可选择
+                    newIndexAfterDeletion = nil // No other items to select
                 }
             } else if idx < selectedItemIdx {
                 newIndexAfterDeletion = selectedItemIdx > 0 ? selectedItemIdx - 1 : 0
@@ -338,7 +338,7 @@ struct ClipView: View {
 
             PersistenceController.shared.delete(item: clipData)
 
-            // 在删除后更新选中项
+            // Update selected item after deletion
             DispatchQueue.main.async {
                 if let newIndex = newIndexAfterDeletion, filteredClips.indices.contains(newIndex) {
                     viewModel.selectedItem = filteredClips[newIndex]

@@ -35,7 +35,7 @@ class ChatWindowManager {
         lock.unlock()
 
         windowController.showWindow(nil)
-        // 如果你需要处理窗口关闭事件，你可以添加一个通知观察者
+        // If you need to handle window close events, you can add a notification observer
         NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: windowController.window, queue: nil) { _ in
         }
     }
@@ -81,8 +81,8 @@ private class ChatWindowController: NSWindowController, NSWindowDelegate {
 
     init(chatService: AIChatService, withContext ctx: ChatContext) {
         var window: NSWindow
-        // 必须用 NSPanel 并设置 .nonactivatingPanel 以及 level 为 .screenSaver
-        // 保证悬浮在全屏应用之上
+        // Must use NSPanel with .nonactivatingPanel and level set to .screenSaver
+        // to ensure it floats above full-screen applications.
         window = FloatingPanel(
             contentRect: .zero,
             backing: .buffered,
@@ -99,8 +99,7 @@ private class ChatWindowController: NSWindowController, NSWindowDelegate {
         let view = ChatTextView(ctx: ctx, viewModel: MessageViewModel(chatService: chatService)).environmentObject(pinnedModel)
         window.level = .screenSaver
         window.contentView = NSHostingView(rootView: AnyView(view))
-        window.delegate = self // 设置代理为自己来监听窗口事件
-
+        window.delegate = self // Set delegate to self to listen for window events
         _ = ChatWindowPositionManager.shared.restorePosition(for: window)
     }
 
@@ -130,7 +129,7 @@ private class ChatWindowController: NSWindowController, NSWindowDelegate {
     }
     
     func windowDidResignActive(_ notification: Notification) {
-        self.close() // 如果需要的话
+        self.close() // Close if needed
     }
 
     func windowDidMove(_ notification: Notification) {

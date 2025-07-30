@@ -81,7 +81,7 @@ struct MenuItemView: View {
         SettingsLink {
             Text("Settings")
         } preAction: {
-            print("打开设置")
+            print("Opening Settings")
             NSApp.activate(ignoringOtherApps: true)
         } postAction: {
             // nothing to do
@@ -91,7 +91,7 @@ struct MenuItemView: View {
     @ViewBuilder
     private var quitItem: some View {
         Button("Quit") {
-            print("退出应用")
+            print("Quitting application")
             NSApplication.shared.terminate(nil)
         }
     }

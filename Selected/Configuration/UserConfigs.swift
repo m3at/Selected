@@ -9,26 +9,26 @@ import Foundation
 
 typealias ActionID = String
 
-// AppCondition 指定某个 app 下的 action 列表。
+// AppCondition specifies the list of actions for a specific app.
 struct AppCondition: Codable {
     let bundleID: String    // bundleID of app
-    var actions: [ActionID] // 在这个 app 下启用的插件列表，以及显示顺序
+    var actions: [ActionID] // List of enabled plugins and their display order for this app
 }
 
-// URLCondition 指定某个 url 下的 action 列表。
+// URLCondition specifies the list of actions for a specific URL.
 struct URLCondition: Codable {
-    let url: String         // URLCondition
-    var actions: [ActionID] // 在这个 app 下启用的插件列表，以及显示顺序
+    let url: String         // URL condition
+    var actions: [ActionID] // List of enabled plugins and their display order for this URL
 }
 
 struct UserConfiguration: Codable {
     var defaultActions: [ActionID]
-    var appConditions: [AppCondition] // 用户设置的应用列表
-    var urlConditions: [URLCondition] // 用户设置的 URL 列表
+    var appConditions: [AppCondition] // User-defined app conditions
+    var urlConditions: [URLCondition] // User-defined URL conditions
 }
 
-// ConfigurationManager 读取、保存应用的复杂配置，比如什么应用下启用哪些 action 等等。
-// 配置保存在 "Library/Application Support/Selected" 下。
+// ConfigurationManager reads and saves complex application configurations, such as which actions are enabled for which apps.
+// Configurations are saved in "Library/Application Support/Selected".
 class ConfigurationManager {
     static let shared = ConfigurationManager()
     private let configurationFileName = "UserConfiguration.json"
@@ -46,6 +46,7 @@ class ConfigurationManager {
                 return condition
             }
         }
+        // If no specific app condition is found, return default actions if they exist.
         if userConfiguration.defaultActions.count > 0 {
             return AppCondition(bundleID: bundleID, actions: userConfiguration.defaultActions)
         }

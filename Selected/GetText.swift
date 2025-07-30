@@ -16,8 +16,8 @@ struct SelectedTextContext {
     var WebPageURL: String = "" // the url of webpage which contains text.
     var URLs = [String]() // all urls in text
     var Address: String = "" // last address in text
-    var Editable: Bool = false // 当前窗口是否可编辑。浏览器里的怎么判断？
-    // TODO: IDE 或者 Editor 下，获取当前编辑文件名、行号等
+    var Editable: Bool = false // Is the current window editable? How to determine for browsers?
+    // TODO: For IDEs or Editors, get the current editing filename, line number, etc.
 }
 
 
@@ -89,8 +89,8 @@ func getSelectedText() -> SelectedTextContext? {
     
     var selectedText = ""
     if isBrowser(id: bundleID) {
-        // 辅助功能也会拿到网页内容，但是可能不够完整。暂时放弃获取地址栏内容
-        // 地址栏的内容，无法通过脚本获取，但是可以通过辅助功能获取。
+        // Accessibility features also get web content, but it might not be complete. Temporarily abandoning getting address bar content.
+        // Address bar content cannot be obtained via script, but can be obtained via accessibility features.
         //        selectedText = getSelectedTextByAX(bundleID: bundleID)
         //        print("browser \(selectedText)")
         //        if selectedText.isEmpty {
@@ -297,7 +297,7 @@ func getSelectedTextByAppleScript(bundleID: String) -> BroswerSelectedTextContex
         let selected = getSelectedTextByAppleScriptFromChrome(bundleID: bundleID)
         let url = getChromeCurrentTabURL(bundleID: bundleID)
         if isArc(id: bundleID) {
-            // arc 浏览器获得的文本前后会带双引号，需要去掉。
+            // Arc browser gets text with double quotes at the beginning and end, which need to be removed.
             return BroswerSelectedTextContext(url: url, text: String(String(selected.dropLast(1)).dropFirst(1)))
         }
         return BroswerSelectedTextContext(url: url, text: selected)
@@ -311,10 +311,10 @@ func getSelectedTextByAppleScript(bundleID: String) -> BroswerSelectedTextContex
     return nil
 }
 
-// 需要开启 Safari 开发者设置中的 “允许 Apple 事件中的 JavaScript”
+// Requires enabling "Allow JavaScript from Apple Events" in Safari's Developer settings
 func getSelectedTextByAppleScriptFromSafari(bundleID: String) -> String{
-    // 在应用到 info 里加入 NSAppleEventsUsageDescription 描述，让用户授权就可以执行 apple script 与其它 app 交互
-    // 不需要单独建一个 Info.plist，不生效
+    // Add NSAppleEventsUsageDescription to Info.plist to describe the purpose of interacting with other apps via Apple Script, allowing users to grant permission.
+    // No need to create a separate Info.plist, it won't work.
     print("bundleID: \(bundleID)")
     if let scriptObject =  NSAppleScript(source: """
                   with timeout of 5 seconds
@@ -340,8 +340,8 @@ func getSelectedTextByAppleScriptFromSafari(bundleID: String) -> String{
 
 
 func getSelectedTextByAppleScriptFromChrome(bundleID: String) -> String{
-    // 在应用到 info 里加入 NSAppleEventsUsageDescription 描述，让用户授权就可以执行 apple script 与其它 app 交互
-    // 不需要单独建一个 Info.plist，不生效
+    // Add NSAppleEventsUsageDescription to Info.plist to describe the purpose of interacting with other apps via Apple Script, allowing users to grant permission.
+    // No need to create a separate Info.plist, it won't work.
     if let scriptObject =  NSAppleScript(source: """
                   with timeout of 5 seconds
                       tell application id "\(bundleID)"

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// MARK: - 自定义搜索框（基于 NSSearchField，可以捕获方向键事件）
+// MARK: - Custom Search Field (Can capture arrow key events)
 struct CustomSearchField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String = "Search"
@@ -58,7 +58,7 @@ struct CustomSearchField: NSViewRepresentable {
     }
 }
 
-// MARK: - 搜索框外层样式封装
+// MARK: - Search Bar View Wrapper
 struct SearchBarView: View {
     @Binding var searchText: String
     var onArrowKey: (CustomSearchField.ArrowDirection) -> Void

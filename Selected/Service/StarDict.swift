@@ -52,14 +52,14 @@ class StarDict {
 }
 
 private func extractTarGzFile(tarGzPath: String, destination: URL) {
-    // 创建一个 Process 来执行 tar 命令
+    // Create a Process to execute the tar command
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
     process.arguments = ["-xzf", tarGzPath, "-C", destination.path]
     
     do {
         try process.run()
-        process.waitUntilExit()  // 等待解压完成
+        process.waitUntilExit()  // Wait for extraction to complete
         if process.terminationStatus == 0 {
             print("File successfully extracted.")
         } else {
